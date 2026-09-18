@@ -4,23 +4,16 @@ import { pool } from '../config/db';
 import { env } from '../config/env';
 
 async function createAdmin() {
-  const name = env.initialAdmin.name;
-  const email = env.initialAdmin.email;
-  const password = env.initialAdmin.password;
+  const { name, email, password } = env.initialAdmin;
 
   if (!name || !email || !password) {
-    console.error(
-      'Missing INITIAL_ADMIN_NAME, INITIAL_ADMIN_EMAIL, or INITIAL_ADMIN_PASSWORD in .env'
-    );
+    console.error('Missing INITIAL_ADMIN_NAME, INITIAL_ADMIN_EMAIL, or INITIAL_ADMIN_PASSWORD in .env');
     process.exit(1);
   }
 
   const connection = await pool.getConnection();
   try {
-    const [existing] = await connection.query(
-      'SELECT id FROM users WHERE email = ? LIMIT 1',
-      [email.toLowerCase()]
-    );
+    const [existing] = await connection.query('SELECT id FROM users WHERE email = ? LIMIT 1', [email.toLowerCase()]);
     if ((existing as Array<{ id: string }>).length > 0) {
       console.log(`Admin with email "${email}" already exists. Skipping creation.`);
       return;
@@ -33,11 +26,7 @@ async function createAdmin() {
       [id, name, email.toLowerCase(), passwordHash]
     );
 
-    const [rows] = await connection.query(
-      'SELECT id, name, email, role FROM users WHERE id = ?',
-      [id]
-    );
-
+    const [rows] = await connection.query('SELECT id, name, email, role FROM users WHERE id = ?', [id]);
     const admin = (rows as Array<{ id: string; name: string; email: string; role: string }>)[0];
     console.log('Admin created successfully:');
     console.log(`  ID:    ${admin.id}`);

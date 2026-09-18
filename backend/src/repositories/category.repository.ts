@@ -41,7 +41,7 @@ export const categoryRepository = {
   async create(data: { name: string; slug: string; description?: string | null; icon?: string | null }): Promise<CategoryRecord> {
     const id = randomUUID();
     await pool.query(
-      `INSERT INTO categories (id, name, slug, description, icon) VALUES (?, ?, ?, ?, ?)`,
+      'INSERT INTO categories (id, name, slug, description, icon) VALUES (?, ?, ?, ?, ?)',
       [id, data.name, data.slug, data.description ?? null, data.icon ?? null]
     );
     const [rows] = await pool.query('SELECT * FROM categories WHERE id = ?', [id]);
@@ -56,15 +56,10 @@ export const categoryRepository = {
     const values: unknown[] = [];
 
     for (const [key, value] of Object.entries(data)) {
-      if (value !== undefined) {
-        fields.push(`${key} = ?`);
-        values.push(value);
-      }
+      if (value !== undefined) { fields.push(`${key} = ?`); values.push(value); }
     }
 
-    if (fields.length === 0) {
-      return this.findById(id);
-    }
+    if (fields.length === 0) return this.findById(id);
 
     values.push(id);
     await pool.query(`UPDATE categories SET ${fields.join(', ')} WHERE id = ?`, values);

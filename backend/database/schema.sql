@@ -1,13 +1,7 @@
 -- =====================================================================
 -- Computer Shop - MySQL Database Schema
 -- =====================================================================
--- Run with: mysql -u <user> -p < database/schema.sql
--- Or via: npm run migrate (executes this file programmatically)
--- =====================================================================
 
--- ---------------------------------------------------------------------
--- USERS / ADMINS
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
     id            CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     name          VARCHAR(120) NOT NULL,
@@ -21,9 +15,6 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX idx_users_email ON users (email);
 
--- ---------------------------------------------------------------------
--- CATEGORIES
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS categories (
     id          CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     name        VARCHAR(120) NOT NULL UNIQUE,
@@ -36,9 +27,6 @@ CREATE TABLE IF NOT EXISTS categories (
 
 CREATE INDEX idx_categories_slug ON categories (slug);
 
--- ---------------------------------------------------------------------
--- PRODUCTS
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS products (
     id                CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     name              VARCHAR(200) NOT NULL,
@@ -66,9 +54,6 @@ CREATE INDEX idx_products_price ON products (price);
 CREATE INDEX idx_products_is_featured ON products (is_featured);
 CREATE INDEX idx_products_is_active ON products (is_active);
 
--- ---------------------------------------------------------------------
--- PRODUCT IMAGES
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS product_images (
     id          CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     product_id  CHAR(36) NOT NULL,
@@ -81,16 +66,13 @@ CREATE TABLE IF NOT EXISTS product_images (
 
 CREATE INDEX idx_product_images_product_id ON product_images (product_id);
 
--- ---------------------------------------------------------------------
--- CUSTOMER ORDERS / PRODUCT INQUIRIES
--- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS orders (
     id               CHAR(36) PRIMARY KEY DEFAULT (UUID()),
     order_number     VARCHAR(32) NOT NULL UNIQUE,
     customer_name    VARCHAR(120) NOT NULL,
     customer_email   VARCHAR(160) NOT NULL,
     customer_phone   VARCHAR(40) NOT NULL,
-    status           ENUM('NEW', 'CONFIRMED', 'PROCESSING', 'READY', 'COMPLETED', 'CANCELLED') NOT NULL DEFAULT 'NEW',
+    status           ENUM('NEW','CONFIRMED','PROCESSING','READY','COMPLETED','CANCELLED') NOT NULL DEFAULT 'NEW',
     subtotal         DECIMAL(12,2) NOT NULL DEFAULT 0,
     notes            TEXT,
     created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

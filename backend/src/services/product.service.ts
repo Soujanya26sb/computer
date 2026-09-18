@@ -115,7 +115,7 @@ export const productService = {
       model: string;
       price: number;
       stock_quantity: number;
-      short_description: string;
+      short_description?: string;
       description: string;
       features: string[];
       specifications: Record<string, string>;
@@ -134,7 +134,11 @@ export const productService = {
       slug = `${baseSlug}-${counter}`;
     }
 
-    const product = await productRepository.create({ ...data, slug });
+    const product = await productRepository.create({
+      ...data,
+      short_description: data.short_description ?? data.description.slice(0, 300),
+      slug,
+    });
 
     if (imageFiles.length > 0) {
       const images = imageFiles.map((file, index) => ({

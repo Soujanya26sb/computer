@@ -50,24 +50,22 @@ export interface ListProductsFilters {
 
 function buildSortClause(sortBy?: string): string {
   switch (sortBy) {
-    case 'price_asc':
-      return 'p.price ASC';
-    case 'price_desc':
-      return 'p.price DESC';
-    case 'name_asc':
-      return 'p.name ASC';
-    case 'name_desc':
-      return 'p.name DESC';
+    case 'price_asc': return 'p.price ASC';
+    case 'price_desc': return 'p.price DESC';
+    case 'name_asc': return 'p.name ASC';
+    case 'name_desc': return 'p.name DESC';
     case 'newest':
-    default:
-      return 'p.created_at DESC';
+    default: return 'p.created_at DESC';
   }
 }
 
 async function attachImages(products: ProductRecord[]): Promise<ProductRecord[]> {
   if (products.length === 0) return products;
   const ids = products.map((p) => p.id);
-  const [rows] = await pool.query('SELECT * FROM product_images WHERE product_id IN (?) ORDER BY is_primary DESC, sort_order ASC, created_at ASC', [ids]);
+  const [rows] = await pool.query(
+    'SELECT * FROM product_images WHERE product_id IN (?) ORDER BY is_primary DESC, sort_order ASC, created_at ASC',
+    [ids]
+  );
   const imagesByProduct = new Map<string, ProductImageRecord[]>();
   for (const img of rows as ProductImageRecord[]) {
     const list = imagesByProduct.get(img.product_id) ?? [];
@@ -82,9 +80,7 @@ export const productRepository = {
     const conditions: string[] = [];
     const values: unknown[] = [];
 
-    if (!filters.includeInactive) {
-      conditions.push('p.is_active = TRUE');
-    }
+    if (!filters.includeInactive) conditions.push('p.is_active = TRUE');
 
     if (filters.search) {
       conditions.push('(p.name LIKE ? OR p.brand LIKE ? OR p.model LIKE ? OR p.short_description LIKE ?)');
@@ -92,39 +88,19 @@ export const productRepository = {
       values.push(term, term, term, term);
     }
 
-    if (filters.categorySlug) {
-      conditions.push('c.slug = ?');
-      values.push(filters.categorySlug);
-    }
-
-    if (filters.brand) {
-      conditions.push('p.brand = ?');
-      values.push(filters.brand);
-    }
-
-    if (filters.minPrice !== undefined) {
-      conditions.push('p.price >= ?');
-      values.push(filters.minPrice);
-    }
-
-    if (filters.maxPrice !== undefined) {
-      conditions.push('p.price <= ?');
-      values.push(filters.maxPrice);
-    }
-
-    if (filters.featured) {
-      conditions.push('p.is_featured = TRUE');
-    }
+    if (filters.categorySlug) { conditions.push('c.slug = ?'); values.push(filters.categorySlug); }
+    if (filters.brand) { conditions.push('p.brand = ?'); values.push(filters.brand); }
+    if (filters.minPrice !== undefined) { conditions.push('p.price >= ?'); values.push(filters.minPrice); }
+    if (filters.maxPrice !== undefined) { conditions.push('p.price <= ?'); values.push(filters.maxPrice); }
+    if (filters.featured) conditions.push('p.is_featured = TRUE');
 
     if (filters.stockStatus === 'OUT_OF_STOCK') {
-      conditions.push('p.stock_quantity <= ?');
-      values.push(filters.outOfStockThreshold);
+      conditions.push('p.stock_quantity <= ?'); values.push(filters.outOfStockThreshold);
     } else if (filters.stockStatus === 'LOW_STOCK') {
       conditions.push('p.stock_quantity > ? AND p.stock_quantity <= ?');
       values.push(filters.outOfStockThreshold, filters.lowStockThreshold);
     } else if (filters.stockStatus === 'IN_STOCK') {
-      conditions.push('p.stock_quantity > ?');
-      values.push(filters.lowStockThreshold);
+      conditions.push('p.stock_quantity > ?'); values.push(filters.lowStockThreshold);
     }
 
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
@@ -132,10 +108,7 @@ export const productRepository = {
     const offset = (filters.page - 1) * filters.limit;
 
     const [countRows] = await pool.query(
-      `SELECT COUNT(*) AS count
-       FROM products p
-       JOIN categories c ON c.id = p.category_id
-       ${whereClause}`,
+      `SELECT COUNT(*) AS count FROM products p JOIN categories c ON c.id = p.category_id ${whereClause}`,
       values
     );
     const total = Number((countRows as Array<{ count: number | string }>)[0]?.count ?? 0);
@@ -186,27 +159,16 @@ export const productRepository = {
 
   async slugExists(slug: string, excludeId?: string): Promise<boolean> {
     const [rows] = await pool.query(
-      excludeId
-        ? 'SELECT 1 FROM products WHERE slug = ? AND id != ?'
-        : 'SELECT 1 FROM products WHERE slug = ?',
+      excludeId ? 'SELECT 1 FROM products WHERE slug = ? AND id != ?' : 'SELECT 1 FROM products WHERE slug = ?',
       excludeId ? [slug, excludeId] : [slug]
     );
     return (rows as any[]).length > 0;
   },
 
   async create(data: {
-    name: string;
-    slug: string;
-    category_id: string;
-    brand: string;
-    model: string;
-    price: number;
-    stock_quantity: number;
-    short_description: string;
-    description: string;
-    features: string[];
-    specifications: Record<string, string>;
-    is_featured: boolean;
+    name: string; slug: string; category_id: string; brand: string; model: string;
+    price: number; stock_quantity: number; short_description: string; description: string;
+    features: string[]; specifications: Record<string, string>; is_featured: boolean;
   }): Promise<ProductRecord> {
     const productId = randomUUID();
     await pool.query(
@@ -214,19 +176,9 @@ export const productRepository = {
         (id, name, slug, category_id, brand, model, price, stock_quantity, short_description, description, features, specifications, is_featured)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
-        productId,
-        data.name,
-        data.slug,
-        data.category_id,
-        data.brand,
-        data.model,
-        data.price,
-        data.stock_quantity,
-        data.short_description,
-        data.description,
-        JSON.stringify(data.features),
-        JSON.stringify(data.specifications),
-        data.is_featured,
+        productId, data.name, data.slug, data.category_id, data.brand, data.model,
+        data.price, data.stock_quantity, data.short_description, data.description,
+        JSON.stringify(data.features), JSON.stringify(data.specifications), data.is_featured,
       ]
     );
     const [rows] = await pool.query('SELECT * FROM products WHERE id = ?', [productId]);
@@ -239,18 +191,11 @@ export const productRepository = {
 
     for (const [key, value] of Object.entries(data)) {
       if (value === undefined) continue;
-      if (key === 'features' || key === 'specifications') {
-        fields.push(`${key} = ?`);
-        values.push(JSON.stringify(value));
-      } else {
-        fields.push(`${key} = ?`);
-        values.push(value);
-      }
+      fields.push(`${key} = ?`);
+      values.push(key === 'features' || key === 'specifications' ? JSON.stringify(value) : value);
     }
 
-    if (fields.length === 0) {
-      return this.findById(id, true);
-    }
+    if (fields.length === 0) return this.findById(id, true);
 
     values.push(id);
     await pool.query(`UPDATE products SET ${fields.join(', ')} WHERE id = ?`, values);
@@ -272,8 +217,7 @@ export const productRepository = {
     for (const [index, img] of images.entries()) {
       const imageId = randomUUID();
       await pool.query(
-        `INSERT INTO product_images (id, product_id, image_url, is_primary, sort_order)
-         VALUES (?, ?, ?, ?, ?)`,
+        'INSERT INTO product_images (id, product_id, image_url, is_primary, sort_order) VALUES (?, ?, ?, ?, ?)',
         [imageId, productId, img.image_url, img.is_primary ?? false, img.sort_order ?? index]
       );
       const [rows] = await pool.query('SELECT * FROM product_images WHERE id = ?', [imageId]);
@@ -298,8 +242,7 @@ export const productRepository = {
   async ensurePrimaryImage(productId: string): Promise<void> {
     const images = await this.getImages(productId);
     if (images.length === 0) return;
-    const hasPrimary = images.some((img) => img.is_primary);
-    if (!hasPrimary) {
+    if (!images.some((img) => img.is_primary)) {
       await pool.query('UPDATE product_images SET is_primary = TRUE WHERE id = ?', [images[0].id]);
     }
   },
@@ -317,4 +260,3 @@ export const productRepository = {
     return (rows as Array<{ total_products: number; in_stock: number; low_stock: number; out_of_stock: number }>)[0];
   },
 };
-

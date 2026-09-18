@@ -46,7 +46,7 @@ export const createProductSchema = z.object({
     model: z.string().min(1, 'Model is required').max(120),
     price: z.coerce.number().positive('Price must be greater than 0'),
     stock_quantity: z.coerce.number().int().min(0, 'Stock quantity cannot be negative'),
-    short_description: z.string().min(5, 'Short description is required').max(300),
+    short_description: z.string().min(5).max(300).optional(),
     description: z.string().min(10, 'Detailed description is required'),
     features: featuresField,
     specifications: specificationsField,
