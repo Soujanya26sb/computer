@@ -1,0 +1,205 @@
+@import "tailwindcss";
+
+:root {
+  --brand: #2874f0;
+  --brand-dark: #1a5dc8;
+  --accent: #ff6161;
+  --accent2: #fb641b;
+  --gold: #f0c040;
+  --ink: #212121;
+  --muted: #878787;
+  --line: #e0e0e0;
+  --paper: #f1f3f6;
+  --green: #388e3c;
+  --surface: #ffffff;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: var(--paper);
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+button, input, select, textarea { font: inherit; }
+
+::selection { background: #2874f0; color: #fff; }
+
+/* ── Navbar gradient ── */
+.nav-gradient {
+  background: linear-gradient(135deg, #2874f0 0%, #1a5dc8 60%, #0f3d8c 100%);
+}
+
+/* ── Hero gradient ── */
+.hero-gradient {
+  background: linear-gradient(135deg, #2874f0 0%, #1565c0 50%, #0d47a1 100%);
+}
+
+/* ── Product card ── */
+.product-card {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 60px rgba(40, 116, 240, 0.18);
+  border-color: #2874f0;
+}
+.product-card img {
+  transition: transform 0.4s ease;
+}
+.product-card:hover img {
+  transform: scale(1.07);
+}
+
+/* ── Flipkart-style badge ── */
+.fk-badge {
+  background: linear-gradient(135deg, #2874f0, #1a5dc8);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+/* ── Offer badge ── */
+.offer-badge {
+  background: #388e3c;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* ── Button lift ── */
+.btn-primary {
+  background: linear-gradient(135deg, #fb641b, #f0522a);
+  color: #fff;
+  font-weight: 900;
+  border-radius: 4px;
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
+.btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+
+.btn-blue {
+  background: linear-gradient(135deg, #2874f0, #1a5dc8);
+  color: #fff;
+  font-weight: 900;
+  border-radius: 4px;
+  transition: filter 0.18s ease, transform 0.18s ease;
+}
+.btn-blue:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+/* ── Scrollbar hide ── */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { scrollbar-width: none; }
+
+/* ── Shimmer loading ── */
+@keyframes shimmer {
+  0% { background-position: -800px 0; }
+  100% { background-position: 800px 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+/* ── Slide-in animation ── */
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.slide-down { animation: slideDown 0.25s ease forwards; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.fade-in { animation: fadeIn 0.3s ease forwards; }
+
+/* ── Category pill active ── */
+.cat-pill-active {
+  background: #2874f0;
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(40, 116, 240, 0.35);
+}
+
+/* ── Star rating ── */
+.star-fill { color: #fff; }
+.rating-badge {
+  background: #388e3c;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 7px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ── Admin sidebar ── */
+.admin-sidebar {
+  background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+}
+
+/* ── Flipkart-style section header ── */
+.section-header {
+  border-left: 4px solid #2874f0;
+  padding-left: 12px;
+}
+
+/* ── Price strike ── */
+.price-strike {
+  text-decoration: line-through;
+  color: #878787;
+}
+
+/* ── Responsive grid ── */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+/* ── Floating label input ── */
+.input-field {
+  border: 1.5px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 10px 14px;
+  font-size: 14px;
+  transition: border-color 0.18s;
+  outline: none;
+  width: 100%;
+  background: #fff;
+}
+.input-field:focus { border-color: #2874f0; box-shadow: 0 0 0 3px rgba(40,116,240,0.12); }
+
+/* ── Toast ── */
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.toast { animation: toastIn 0.3s ease forwards; }
+
+/* ── Marquee ── */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-inner { animation: marquee 28s linear infinite; }
+.marquee-inner:hover { animation-play-state: paused; }
+
+/* ── Pulse dot ── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.pulse-dot { animation: pulse-dot 1.6s ease-in-out infinite; }
