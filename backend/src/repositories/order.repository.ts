@@ -30,7 +30,7 @@ export interface OrderItemRecord {
 
 async function attachItems(orders: OrderRecord[]) {
   if (!orders.length) return orders;
-  const ids = orders.map((order) => order.id);
+  const ids = orders.map((o) => o.id);
   const [rows] = await pool.query('SELECT * FROM order_items WHERE order_id IN (?) ORDER BY id ASC', [ids]);
   const itemsByOrder = new Map<string, OrderItemRecord[]>();
   for (const item of rows as OrderItemRecord[]) {
@@ -38,53 +38,46 @@ async function attachItems(orders: OrderRecord[]) {
     list.push(item);
     itemsByOrder.set(item.order_id, list);
   }
-  return orders.map((order) => ({ ...order, items: itemsByOrder.get(order.id) ?? [] }));
+  return orders.map((o) => ({ ...o, items: itemsByOrder.get(o.id) ?? [] }));
 }
 
 export const orderRepository = {
   async create(data: {
-    orderNumber: string;
-    customerName: string;
-    customerEmail: string;
-    customerPhone: string;
-    subtotal: number;
-    notes?: string;
+    orderNumber: string; customerName: string; customerEmail: string; customerPhone: string;
+    subtotal: number; notes?: string;
     items: Array<{ productId: string; productName: string; productSlug: string; unitPrice: number; quantity: number; lineTotal: number }>;
   }) {
     const orderId = randomUUID();
     await pool.query(
-      `INSERT INTO orders (id, order_number, customer_name, customer_email, customer_phone, subtotal, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      'INSERT INTO orders (id, order_number, customer_name, customer_email, customer_phone, subtotal, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [orderId, data.orderNumber, data.customerName, data.customerEmail.toLowerCase(), data.customerPhone, data.subtotal, data.notes ?? null]
     );
-
     for (const item of data.items) {
       await pool.query(
-        `INSERT INTO order_items (id, order_id, product_id, product_name, product_slug, unit_price, quantity, line_total)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        'INSERT INTO order_items (id, order_id, product_id, product_name, product_slug, unit_price, quantity, line_total) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [randomUUID(), orderId, item.productId, item.productName, item.productSlug, item.unitPrice, item.quantity, item.lineTotal]
       );
     }
-
     return this.findById(orderId);
   },
 
   async list(filters: { search?: string; status?: OrderStatus; page: number; limit: number }) {
     const conditions: string[] = [];
     const values: unknown[] = [];
+
     if (filters.search) {
       conditions.push('(order_number LIKE ? OR customer_name LIKE ? OR customer_email LIKE ? OR customer_phone LIKE ?)');
       const term = `%${filters.search}%`;
       values.push(term, term, term, term);
     }
-    if (filters.status) {
-      conditions.push('status = ?');
-      values.push(filters.status);
-    }
+    if (filters.status) { conditions.push('status = ?'); values.push(filters.status); }
+
     const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
     const offset = (filters.page - 1) * filters.limit;
+
     const [countRows] = await pool.query(`SELECT COUNT(*) AS count FROM orders ${whereClause}`, values);
     const total = Number((countRows as Array<{ count: string | number }>)[0]?.count ?? 0);
+
     const [rows] = await pool.query(
       `SELECT * FROM orders ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
       [...values, filters.limit, offset]
@@ -110,7 +103,7 @@ export const orderRepository = {
       `SELECT
         COUNT(*) AS total_orders,
         SUM(CASE WHEN status = 'NEW' THEN 1 ELSE 0 END) AS new_orders,
-        SUM(CASE WHEN status IN ('CONFIRMED', 'PROCESSING', 'READY') THEN 1 ELSE 0 END) AS active_orders,
+        SUM(CASE WHEN status IN ('CONFIRMED','PROCESSING','READY') THEN 1 ELSE 0 END) AS active_orders,
         SUM(CASE WHEN status = 'COMPLETED' THEN 1 ELSE 0 END) AS completed_orders
        FROM orders`
     );

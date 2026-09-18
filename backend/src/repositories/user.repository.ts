@@ -36,8 +36,7 @@ export const userRepository = {
     const id = randomUUID();
     const role = normalizeUserRole(data.role);
     await pool.query(
-      `INSERT INTO users (id, name, email, password_hash, role)
-       VALUES (?, ?, ?, ?, ?)`,
+      'INSERT INTO users (id, name, email, password_hash, role) VALUES (?, ?, ?, ?, ?)',
       [id, data.name, data.email.toLowerCase(), data.passwordHash, role]
     );
     const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [id]);
@@ -73,8 +72,7 @@ export const userRepository = {
 
     const [rows] = await pool.query(
       `SELECT id, name, email, role, is_active, created_at, updated_at
-       FROM users
-       ${whereClause}
+       FROM users ${whereClause}
        ORDER BY created_at DESC
        LIMIT ? OFFSET ?`,
       [...values, filters.limit, offset]
