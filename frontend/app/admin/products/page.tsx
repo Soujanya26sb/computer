@@ -10,17 +10,18 @@ import StockBadge from "@/components/StockBadge";
 import ConfirmationModal from "@/components/admin/ConfirmationModal";
 import LoadingState from "@/components/LoadingState";
 import ErrorState from "@/components/ErrorState";
+import { useToast } from "@/components/Toast";
 
 function ProductsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
 
+  const { showToast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [meta, setMeta] = useState<PaginationMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [toast, setToast] = useState("");
 
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -71,10 +72,9 @@ function ProductsContent() {
     setDeleting(true);
     try {
       await adminDeleteProduct(deleteTarget.id);
-      setToast(`"${deleteTarget.name}" deleted.`);
+      showToast(`"${deleteTarget.name}" deleted.`);
       setDeleteTarget(null);
       fetchProducts();
-      setTimeout(() => setToast(""), 3000);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Delete failed");
       setDeleteTarget(null);
@@ -91,11 +91,6 @@ function ProductsContent() {
 
   return (
     <div className="space-y-5">
-      {toast && (
-        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-          {toast}
-        </div>
-      )}
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}

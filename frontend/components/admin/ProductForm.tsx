@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { Category, Product, ProductImage } from "@/types";
 import { adminGetCategories, adminCreateProduct, adminUpdateProduct } from "@/lib/adminApi";
 import ImageUploader from "./ImageUploader";
+import { useToast } from "@/components/Toast";
 
 interface Props {
   product?: Product;
@@ -18,11 +19,11 @@ interface SpecEntry {
 export default function ProductForm({ product }: Props) {
   const router = useRouter();
   const isEdit = !!product;
+  const { showToast } = useToast();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   // Form fields
   const [name, setName] = useState(product?.name ?? "");
@@ -31,15 +32,9 @@ export default function ProductForm({ product }: Props) {
   const [model, setModel] = useState(product?.model ?? "");
   const [price, setPrice] = useState(product?.price?.toString() ?? "");
   const [stock, setStock] = useState(product?.stockQuantity?.toString() ?? "0");
-  const [shortDesc, setShortDesc] = useState(product?.shortDescription ?? "");
   const [description, setDescription] = useState(product?.description ?? "");
   const [isFeatured, setIsFeatured] = useState(product?.isFeatured ?? false);
   const [isActive, setIsActive] = useState(product?.isActive ?? true);
-
-  // Features
-  const [features, setFeatures] = useState<string[]>(
-    product?.features && product.features.length > 0 ? product.features : [""]
-  );
 
   // Specifications
   const [specs, setSpecs] = useState<SpecEntry[]>(
@@ -56,17 +51,6 @@ export default function ProductForm({ product }: Props) {
   useEffect(() => {
     adminGetCategories().then(setCategories).catch(() => {});
   }, []);
-
-  // Feature helpers
-  function setFeature(idx: number, val: string) {
-    setFeatures((prev) => prev.map((f, i) => (i === idx ? val : f)));
-  }
-  function addFeature() {
-    setFeatures((prev) => [...prev, ""]);
-  }
-  function removeFeature(idx: number) {
-    setFeatures((prev) => prev.filter((_, i) => i !== idx));
-  }
 
   // Spec helpers
   function setSpec(idx: number, field: "key" | "value", val: string) {
@@ -104,12 +88,12 @@ export default function ProductForm({ product }: Props) {
       fd.append("model", model.trim());
       fd.append("price", String(Number(price || 0)));
       fd.append("stock_quantity", String(Number(stock || 0)));
-      fd.append("short_description", shortDesc.trim());
-      fd.append("description", description.trim());
+      const trimmedDesc = description.trim();
+      fd.append("short_description", trimmedDesc.slice(0, 300));
+      fd.append("description", trimmedDesc);
       fd.append("is_featured", String(Boolean(isFeatured)));
 
-      const cleanFeatures = features.map((f) => f.trim()).filter(Boolean);
-      fd.append("features", JSON.stringify(cleanFeatures));
+      fd.append("features", JSON.stringify([]));
 
       const specsObj: Record<string, string> = {};
       specs.forEach(({ key, value }) => {
@@ -130,15 +114,17 @@ export default function ProductForm({ product }: Props) {
 
       if (isEdit && product) {
         await adminUpdateProduct(product.id, fd);
-        setSuccess("Product updated successfully.");
-        setTimeout(() => router.push("/admin/products"), 1200);
+        showToast("Product updated successfully.");
+        setTimeout(() => router.push("/admin/products"), 1000);
       } else {
         await adminCreateProduct(fd);
-        setSuccess("Product created successfully.");
-        setTimeout(() => router.push("/admin/products"), 1200);
+        showToast("Product created successfully.");
+        setTimeout(() => router.push("/admin/products"), 1000);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save product");
+      const msg = err instanceof Error ? err.message : "Failed to save product";
+      setError(msg);
+      showToast(msg, "error");
     } finally {
       setSubmitting(false);
     }
@@ -149,11 +135,6 @@ export default function ProductForm({ product }: Props) {
       {error && (
         <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {error}
-        </div>
-      )}
-      {success && (
-        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
-          {success}
         </div>
       )}
 
@@ -258,62 +239,23 @@ export default function ProductForm({ product }: Props) {
         </div>
       </div>
 
-      {/* Descriptions */}
+      {/* Description */}
       <div className="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm space-y-4">
-        <h2 className="font-bold text-gray-900">Descriptions</h2>
+        <h2 className="font-bold text-gray-900">Description</h2>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Short Description * <span className="text-gray-400 font-normal">(max 300 chars)</span>
+            Description * <span className="text-gray-400 font-normal">(max 300 chars)</span>
           </label>
           <textarea
             required
-            rows={2}
-            maxLength={300}
-            value={shortDesc}
-            onChange={(e) => setShortDesc(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-          />
-          <p className="text-xs text-gray-400 mt-1">{shortDesc.length}/300</p>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Detailed Description *</label>
-          <textarea
-            required
             rows={5}
+            maxLength={300}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
           />
+          <p className="text-xs text-gray-400 mt-1">{description.length}/300</p>
         </div>
-      </div>
-
-      {/* Features */}
-      <div className="rounded-2xl bg-white border border-gray-200 p-6 shadow-sm space-y-3">
-        <h2 className="font-bold text-gray-900">Key Features</h2>
-        {features.map((f, idx) => (
-          <div key={idx} className="flex gap-2">
-            <input
-              value={f}
-              onChange={(e) => setFeature(idx, e.target.value)}
-              placeholder={`Feature ${idx + 1}`}
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              type="button"
-              onClick={() => removeFeature(idx)}
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-red-500 hover:bg-red-50 transition-colors"
-            >
-              ×
-            </button>
-          </div>
-        ))}
-        <button
-          type="button"
-          onClick={addFeature}
-          className="text-sm text-blue-600 hover:underline"
-        >
-          + Add Feature
-        </button>
       </div>
 
       {/* Specifications */}
